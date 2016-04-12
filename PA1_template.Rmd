@@ -5,19 +5,22 @@ output: html_document
 
 ##Loading and preprocessing the data
 
+Before beggining, the working directory must be set where the file `activity.csv` is located. This can be done with the setwd() command.
 Loading packages *dplyr*, *lubridate* and *ggplot2*.
+Reading the table and transforming date variable into POSIXct.
 
-```{r, results="hide"}
+```{r, warning=FALSE, results="hide"}
 library(dplyr)
 library(lubridate)
 library(ggplot2)
 
 activity <- read.csv("activity.csv")
-
 activity$date <- ymd(activity$date)
 ```
 
 ##What is mean total number of steps taken per day?
+
+Using dplyr *group_by* and *summarize*, creating a dataframe containing the total number of steps per day. Then creating histogram with the qplot function.
 
 ```{r}
 activity_day <- (activity %>% group_by(date))
@@ -29,6 +32,8 @@ qplot(sum_steps, data=totalsteps, xlab="Total number of steps per day")
 
 ## What is mean total number of steps taken per day?
 
+The mean and median number of steps per day are calculated with the same dataframe.
+
 ```{r}
 meansteps <- mean(totalsteps$sum_steps, na.rm=TRUE)
 mediansteps <- median(totalsteps$sum_steps, na.rm=TRUE)
@@ -38,6 +43,8 @@ The mean is **`r meansteps`**.
 The median is **`r mediansteps`**
 
 ##What is the average daily activity pattern?
+
+This time, we are grouping the dataframe by interval with *group_by*.
 
 ```{r}
 activity_interval <- (activity %>% group_by(interval))
@@ -62,6 +69,10 @@ NA_number <- sum(is.na(activity$steps))
 The number of missing value is **`r NA_number`**.
 
 ##Filling the missing values for each interval with the mean for that 5-minute interval.
+
+We are merging the dataframe activity and meaninterval. For each row, we now have the original steps value (which may be NA) and the mean value for that interval (mean variable).
+For each step value, creating the fill variable containing the mean value in case of NA value or containing 0 if the value is not NA.
+Finally, adding this value to the steps value.
 
 ```{r}
 activity_filled <- merge(activity, meaninterval, by="interval")
@@ -93,7 +104,7 @@ mediansteps_f <- median(totalsteps_filled$sum_steps)
 
 The mean is **`r meansteps_f`**
 The median is **`r mediansteps_f`**
-Mean and median steps are higher
+Mean and median steps are higher than before.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
@@ -112,7 +123,8 @@ activity_filled$day <- sapply(activity_filled$date, weekday)
 activity_filled$day <- as.factor(activity_filled$day)
 ```
 
-Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this lot should look like using simulated data.
+Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+We are grouping the dataframe by interval and day type (weekday and weekend). Then making a plot with ggplot and facet_wrap.
 
 ```{r}
 activity_day <- (activity_filled %>% group_by(interval, day) %>% summarize(mean_steps = mean(steps)))
@@ -122,3 +134,4 @@ g + geom_line(aes(color=day)) + facet_wrap("day", nrow=2) +
         labs(x = "5-minute interval", y= "Number of steps")
 ```
 
+We can notice that movement is less frequent during weekend. During, weekday, there is a plike between 8:00 a.m and 9:00 a.m, corresponding with the subject getting ready and going to work. During weekend, much less movement at that same time.
